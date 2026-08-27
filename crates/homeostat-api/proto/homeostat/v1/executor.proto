@@ -1,0 +1,41 @@
+syntax = "proto3";
+
+package homeostat.v1;
+
+import "homeostat/v1/common.proto";
+
+service ExecutorService {
+  rpc ValidatePlan(ValidatePlanRequest) returns (ValidatePlanResponse);
+  rpc ExecutePlan(ExecutePlanRequest) returns (Operation);
+  rpc GetOperation(GetOperationRequest) returns (Operation);
+  rpc WatchOperation(WatchOperationRequest) returns (stream Operation);
+  rpc CancelOperation(CancelOperationRequest) returns (Operation);
+}
+
+message ValidatePlanRequest {
+  Plan plan = 1;
+}
+
+message ValidatePlanResponse {
+  bool valid = 1;
+  repeated string violations = 2;
+}
+
+message ExecutePlanRequest {
+  Plan plan = 1;
+  string idempotency_key = 2;
+  bool dry_run = 3;
+}
+
+message GetOperationRequest {
+  string operation_id = 1;
+}
+
+message WatchOperationRequest {
+  string operation_id = 1;
+}
+
+message CancelOperationRequest {
+  string operation_id = 1;
+}
+

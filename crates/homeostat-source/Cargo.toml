@@ -1,0 +1,11 @@
+[package]
+name = "homeostat-source"
+version.workspace = true
+edition.workspace = true
+repository.workspace = true
+publish = false
+
+[dependencies]
+async-trait.workspace = true
+homeostat-api = { path = "../homeostat-api" }
+

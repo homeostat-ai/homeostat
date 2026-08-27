@@ -1,0 +1,22 @@
+[workspace]
+members = [
+    "crates/homeostat-api",
+    "crates/homeostat-controller",
+    "crates/homeostat-executor",
+    "crates/homeostat-source",
+]
+resolver = "3"
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+repository = "https://github.com/homeostat-ai/homeostat"
+
+[workspace.dependencies]
+async-trait = "0.1.92"
+futures-executor = "0.3.34"
+prost = "0.14.4"
+thiserror = "2.0.20"
+tonic = "0.14.6"
+tonic-prost = "0.14.6"
+tonic-prost-build = "0.14.6"

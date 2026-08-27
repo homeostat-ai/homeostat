@@ -1,0 +1,15 @@
+[package]
+name = "homeostat-controller"
+version.workspace = true
+edition.workspace = true
+repository.workspace = true
+publish = false
+
+[dependencies]
+async-trait.workspace = true
+homeostat-api = { path = "../homeostat-api" }
+homeostat-executor = { path = "../homeostat-executor" }
+homeostat-source = { path = "../homeostat-source" }
+
+[dev-dependencies]
+futures-executor.workspace = true
