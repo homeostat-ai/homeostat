@@ -1,0 +1,19 @@
+[package]
+name = "homeostat-cli"
+version.workspace = true
+edition.workspace = true
+repository.workspace = true
+publish = false
+
+[[bin]]
+name = "homeostat"
+path = "src/main.rs"
+
+[dependencies]
+axum.workspace = true
+clap.workspace = true
+opentelemetry.workspace = true
+opentelemetry-prometheus.workspace = true
+opentelemetry_sdk.workspace = true
+prometheus.workspace = true
+tokio.workspace = true

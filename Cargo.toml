@@ -1,6 +1,7 @@
 [workspace]
 members = [
     "crates/homeostat-api",
+    "crates/homeostat-cli",
     "crates/homeostat-controller",
     "crates/homeostat-executor",
     "crates/homeostat-source",
@@ -14,9 +15,16 @@ repository = "https://github.com/homeostat-ai/homeostat"
 
 [workspace.dependencies]
 async-trait = "0.1.92"
+axum = "0.8.9"
+clap = { version = "4.6.6", features = ["derive"] }
 futures-executor = "0.3.34"
+opentelemetry = { version = "0.32.0", default-features = false, features = ["metrics"] }
+opentelemetry-prometheus = { version = "0.32.0", default-features = false }
+opentelemetry_sdk = { version = "0.32.1", default-features = false, features = ["metrics"] }
+prometheus = { version = "0.14.0", default-features = false }
 prost = "0.14.4"
 thiserror = "2.0.20"
+tokio = { version = "1.53.1", features = ["macros", "net", "rt-multi-thread", "signal"] }
 tonic = "0.14.6"
 tonic-prost = "0.14.6"
 tonic-prost-build = "0.14.6"
