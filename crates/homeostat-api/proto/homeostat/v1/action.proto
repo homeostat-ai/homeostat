@@ -1,0 +1,70 @@
+syntax = "proto3";
+
+package homeostat.v1;
+
+import "homeostat/v1/observation.proto";
+
+message MoveShard {
+  string shard_id = 1;
+  string source_node_id = 2;
+  string target_node_id = 3;
+}
+
+// Changes the desired size of a homogeneous node group. The target count is
+// absolute so retries remain idempotent.
+message HorizontalScale {
+  string node_group_id = 1;
+  uint32 target_node_count = 2;
+}
+
+// Changes the desired capacity of one node. Optional fields in the target
+// capacity distinguish an unchanged resource from a requested zero.
+message VerticalScale {
+  string node_id = 1;
+  ResourceCapacity target_capacity = 2;
+}
+
+message TransferLeadership {
+  string shard_id = 1;
+  string target_node_id = 2;
+}
+
+message AddReplica {
+  string shard_id = 1;
+  string target_node_id = 2;
+}
+
+message RemoveReplica {
+  string shard_id = 1;
+  string node_id = 2;
+}
+
+message SplitShard {
+  string shard_id = 1;
+  repeated string split_points = 2;
+}
+
+// Merges two or more compatible shards. The executor is responsible for
+// validating adjacency and system-specific merge constraints.
+message MergeShards {
+  repeated string shard_ids = 1;
+}
+
+message NoOp {}
+
+message Action {
+  string action_id = 1;
+  optional uint64 expected_revision = 2;
+
+  oneof kind {
+    MoveShard move_shard = 10;
+    TransferLeadership transfer_leadership = 11;
+    AddReplica add_replica = 12;
+    RemoveReplica remove_replica = 13;
+    SplitShard split_shard = 14;
+    NoOp no_op = 15;
+    HorizontalScale horizontal_scale = 16;
+    VerticalScale vertical_scale = 17;
+    MergeShards merge_shards = 18;
+  }
+}

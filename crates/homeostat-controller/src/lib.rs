@@ -1,14 +1,14 @@
 //! Planning, policy evaluation, and the Homeostat control loop.
 
 use async_trait::async_trait;
-use homeostat_api::v1::{ClusterSnapshot, Plan};
+use homeostat_api::v1::{Action, NoOp, Observation, action};
 
-/// Proposes a plan from a canonical cluster snapshot.
+/// Proposes one action from a canonical system observation.
 #[async_trait]
 pub trait Policy: Send + Sync {
     type Error: std::error::Error + Send + Sync + 'static;
 
-    async fn propose(&self, snapshot: &ClusterSnapshot) -> Result<Plan, Self::Error>;
+    async fn propose(&self, observation: &Observation) -> Result<Action, Self::Error>;
 }
 
 /// A deterministic policy that allows the observation pipeline to run safely before balancing
@@ -20,12 +20,11 @@ pub struct NoOpPolicy;
 impl Policy for NoOpPolicy {
     type Error = std::convert::Infallible;
 
-    async fn propose(&self, snapshot: &ClusterSnapshot) -> Result<Plan, Self::Error> {
-        Ok(Plan {
-            plan_id: String::new(),
-            system_id: snapshot.system_id.clone(),
-            expected_revision: snapshot.revision,
-            actions: Vec::new(),
+    async fn propose(&self, observation: &Observation) -> Result<Action, Self::Error> {
+        Ok(Action {
+            action_id: String::new(),
+            expected_revision: Some(observation.revision),
+            kind: Some(action::Kind::NoOp(NoOp {})),
         })
     }
 }
@@ -33,20 +32,22 @@ impl Policy for NoOpPolicy {
 #[cfg(test)]
 mod tests {
     use super::{NoOpPolicy, Policy};
-    use homeostat_api::v1::ClusterSnapshot;
+    use homeostat_api::v1::Observation;
 
     #[test]
-    fn no_op_policy_preserves_snapshot_revision() {
-        let snapshot = ClusterSnapshot {
+    fn no_op_policy_preserves_observation_revision() {
+        let observation = Observation {
             system_id: "test-system".to_owned(),
             revision: 42,
             ..Default::default()
         };
 
-        let plan = futures_executor::block_on(NoOpPolicy.propose(&snapshot)).unwrap();
+        let action = futures_executor::block_on(NoOpPolicy.propose(&observation)).unwrap();
 
-        assert_eq!(plan.system_id, snapshot.system_id);
-        assert_eq!(plan.expected_revision, snapshot.revision);
-        assert!(plan.actions.is_empty());
+        assert_eq!(action.expected_revision, Some(observation.revision));
+        assert!(matches!(
+            action.kind,
+            Some(homeostat_api::v1::action::Kind::NoOp(_))
+        ));
     }
 }

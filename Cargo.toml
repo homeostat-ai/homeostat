@@ -25,8 +25,6 @@ opentelemetry-prometheus = { version = "0.32.0", default-features = false }
 opentelemetry_sdk = { version = "0.32.1", default-features = false, features = ["metrics"] }
 prometheus = { version = "0.14.0", default-features = false }
 prost = "0.14.4"
+prost-build = "0.14.4"
 thiserror = "2.0.20"
 tokio = { version = "1.53.1", features = ["macros", "net", "rt-multi-thread", "signal"] }
-tonic = "0.14.6"
-tonic-prost = "0.14.6"
-tonic-prost-build = "0.14.6"

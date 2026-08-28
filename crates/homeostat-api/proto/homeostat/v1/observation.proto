@@ -1,0 +1,251 @@
+syntax = "proto3";
+
+package homeostat.v1;
+
+// Capacity that can be requested by an action or advertised by a node group.
+// Optional fields distinguish an unknown or unchanged resource from zero.
+message ResourceCapacity {
+  optional double cpu_cores = 1;
+  optional uint64 memory_bytes = 2;
+  optional uint64 storage_bytes = 3;
+  optional double network_rx_bytes_per_sec = 4;
+  optional double network_tx_bytes_per_sec = 5;
+}
+
+message ComputeObservation {
+  optional double capacity_cores = 1;
+  optional double allocated_cores = 2;
+  optional double used_cores = 3;
+  optional double utilization_ratio = 4;
+  optional double throttled_ratio = 5;
+}
+
+message MemoryObservation {
+  optional uint64 capacity_bytes = 1;
+  optional uint64 allocated_bytes = 2;
+  optional uint64 used_bytes = 3;
+  optional uint64 available_bytes = 4;
+  optional double utilization_ratio = 5;
+}
+
+// Physical or virtual network activity observed at a node. This is distinct
+// from logical reads and writes in Workload.
+message NetworkObservation {
+  optional double rx_bytes_per_sec = 1;
+  optional double tx_bytes_per_sec = 2;
+  optional double rx_packets_per_sec = 3;
+  optional double tx_packets_per_sec = 4;
+  optional double rx_dropped_packets_per_sec = 5;
+  optional double tx_dropped_packets_per_sec = 6;
+  optional double rx_errors_per_sec = 7;
+  optional double tx_errors_per_sec = 8;
+  optional double rx_capacity_bytes_per_sec = 9;
+  optional double tx_capacity_bytes_per_sec = 10;
+  optional double rx_utilization_ratio = 11;
+  optional double tx_utilization_ratio = 12;
+}
+
+// Aggregate storage activity for a node. Individual storage devices are not
+// identified because storage is not an action target in the v1 contract.
+message StorageObservation {
+  optional uint64 capacity_bytes = 1;
+  optional uint64 used_bytes = 2;
+  optional double read_bytes_per_sec = 3;
+  optional double write_bytes_per_sec = 4;
+  optional double read_ops_per_sec = 5;
+  optional double write_ops_per_sec = 6;
+  optional double read_latency_p99_ms = 7;
+  optional double write_latency_p99_ms = 8;
+  optional double utilization_ratio = 9;
+  optional double queue_depth = 10;
+}
+
+// Logical application work, independent of any particular messaging,
+// database, or storage implementation.
+message Workload {
+  optional double read_ops_per_sec = 1;
+  optional double write_ops_per_sec = 2;
+  optional double read_bytes_per_sec = 3;
+  optional double write_bytes_per_sec = 4;
+  optional uint64 active_writers = 5;
+  optional uint64 active_readers = 6;
+  optional uint64 read_groups = 7;
+  optional uint64 queued_ops = 8;
+  optional uint64 queued_bytes = 9;
+  optional double read_latency_p99_ms = 10;
+  optional double write_latency_p99_ms = 11;
+  optional double read_error_ratio = 12;
+  optional double write_error_ratio = 13;
+}
+
+enum HealthStatus {
+  HEALTH_STATUS_UNSPECIFIED = 0;
+  HEALTH_STATUS_STARTING = 1;
+  HEALTH_STATUS_HEALTHY = 2;
+  HEALTH_STATUS_DEGRADED = 3;
+  HEALTH_STATUS_UNHEALTHY = 4;
+  HEALTH_STATUS_DRAINING = 5;
+  HEALTH_STATUS_UNAVAILABLE = 6;
+}
+
+message HealthObservation {
+  HealthStatus status = 1;
+  optional uint64 restart_count = 2;
+  optional uint64 uptime_ms = 3;
+  repeated string conditions = 4;
+}
+
+message NodeObservation {
+  string node_id = 1;
+  optional string node_group_id = 2;
+  ComputeObservation compute = 3;
+  MemoryObservation memory = 4;
+  NetworkObservation network = 5;
+  StorageObservation storage = 6;
+  Workload workload = 7;
+  HealthObservation health = 8;
+  map<string, string> labels = 9;
+  map<string, string> topology_domains = 10;
+  optional uint32 shard_count = 11;
+}
+
+message NodeGroupObservation {
+  string node_group_id = 1;
+  optional uint32 desired_nodes = 2;
+  optional uint32 ready_nodes = 3;
+  optional uint32 min_nodes = 4;
+  optional uint32 max_nodes = 5;
+  ResourceCapacity node_capacity = 6;
+  optional double cost_units_per_node_hour = 7;
+  optional uint64 estimated_startup_duration_ms = 8;
+  map<string, string> labels = 9;
+}
+
+// Shard resource attribution is often not directly observable. Adapters leave
+// fields absent rather than reporting an invented zero.
+message ResourceDemand {
+  optional double cpu_cores = 1;
+  optional uint64 memory_bytes = 2;
+  optional double network_rx_bytes_per_sec = 3;
+  optional double network_tx_bytes_per_sec = 4;
+  optional double storage_read_bytes_per_sec = 5;
+  optional double storage_write_bytes_per_sec = 6;
+  optional double storage_read_ops_per_sec = 7;
+  optional double storage_write_ops_per_sec = 8;
+}
+
+message ShardCapabilities {
+  bool movable = 1;
+  bool splittable = 2;
+  bool mergeable = 3;
+}
+
+enum ShardState {
+  SHARD_STATE_UNSPECIFIED = 0;
+  SHARD_STATE_INITIALIZING = 1;
+  SHARD_STATE_ACTIVE = 2;
+  SHARD_STATE_INACTIVE = 3;
+  SHARD_STATE_TRANSITIONING = 4;
+  SHARD_STATE_DEGRADED = 5;
+  SHARD_STATE_UNAVAILABLE = 6;
+}
+
+// An ordered, optional summary of load within a shard. It lets a planner learn
+// useful split points without exposing backend-specific key representations.
+message ShardSegmentObservation {
+  uint32 ordinal = 1;
+  optional string split_point_after = 2;
+  Workload workload = 3;
+  optional uint64 state_bytes = 4;
+}
+
+message ShardObservation {
+  string shard_id = 1;
+  Workload workload = 2;
+  optional uint64 state_bytes = 3;
+  ResourceDemand estimated_demand = 4;
+  ShardCapabilities capabilities = 5;
+  repeated ShardSegmentObservation segments = 6;
+  map<string, string> labels = 7;
+  ShardState state = 8;
+}
+
+message ShardRelation {
+  string shard_id = 1;
+  repeated string adjacent_shard_ids = 2;
+  optional string compatibility_group = 3;
+}
+
+// Stable, externally observable role of a shard placement. Election epochs,
+// replication lag, and catch-up state remain internal to the managed system.
+enum PlacementRole {
+  PLACEMENT_ROLE_UNSPECIFIED = 0;
+  PLACEMENT_ROLE_LEADER = 1;
+  PLACEMENT_ROLE_FOLLOWER = 2;
+  PLACEMENT_ROLE_OBSERVER = 3;
+}
+
+message Placement {
+  string shard_id = 1;
+  string node_id = 2;
+  PlacementRole role = 3;
+}
+
+// Resolved placement policy at observation time. An empty allowed list means
+// every node not present in denied_node_ids is eligible.
+message PlacementConstraint {
+  string shard_id = 1;
+  repeated string allowed_node_ids = 2;
+  repeated string denied_node_ids = 3;
+}
+
+// Directional path information used to estimate movement and replication
+// cost. It is optional when the source cannot observe path-level metrics.
+message NetworkLinkObservation {
+  string source_node_id = 1;
+  string target_node_id = 2;
+  optional double capacity_bytes_per_sec = 3;
+  optional double available_bytes_per_sec = 4;
+  optional double latency_p99_ms = 5;
+  optional double error_ratio = 6;
+}
+
+enum SignalStatus {
+  SIGNAL_STATUS_UNSPECIFIED = 0;
+  SIGNAL_STATUS_AVAILABLE = 1;
+  SIGNAL_STATUS_MISSING = 2;
+  SIGNAL_STATUS_STALE = 3;
+  SIGNAL_STATUS_INVALID = 4;
+}
+
+message SignalQuality {
+  string field_path = 1;
+  SignalStatus status = 2;
+  optional int64 observed_at_unix_ms = 3;
+  optional string source = 4;
+}
+
+message DataQuality {
+  bool complete = 1;
+  optional uint64 collection_duration_ms = 2;
+  optional uint64 max_sample_age_ms = 3;
+  repeated SignalQuality signals = 4;
+  repeated string warnings = 5;
+}
+
+// A point-in-time, backend-neutral view of a managed system. Time-series
+// windows are assembled from these observations by the training pipeline.
+message Observation {
+  string observation_id = 1;
+  string system_id = 2;
+  uint64 revision = 3;
+  int64 observed_at_unix_ms = 4;
+  repeated NodeObservation nodes = 5;
+  repeated NodeGroupObservation node_groups = 6;
+  repeated ShardObservation shards = 7;
+  repeated Placement placements = 8;
+  repeated ShardRelation shard_relations = 9;
+  repeated PlacementConstraint placement_constraints = 10;
+  repeated NetworkLinkObservation network_links = 11;
+  DataQuality data_quality = 12;
+}

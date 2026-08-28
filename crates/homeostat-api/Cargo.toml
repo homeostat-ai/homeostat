@@ -7,9 +7,6 @@ publish = false
 
 [dependencies]
 prost.workspace = true
-tonic.workspace = true
-tonic-prost.workspace = true
 
 [build-dependencies]
-tonic-prost-build.workspace = true
-
+prost-build.workspace = true
