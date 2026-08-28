@@ -5,6 +5,9 @@ edition.workspace = true
 repository.workspace = true
 publish = false
 
+[features]
+training = ["dep:homeostat-training"]
+
 [[bin]]
 name = "homeostat"
 path = "src/main.rs"
@@ -12,6 +15,7 @@ path = "src/main.rs"
 [dependencies]
 axum.workspace = true
 clap.workspace = true
+homeostat-training = { path = "../homeostat-training", optional = true }
 opentelemetry.workspace = true
 opentelemetry-prometheus.workspace = true
 opentelemetry_sdk.workspace = true

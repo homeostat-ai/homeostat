@@ -5,4 +5,13 @@ edition.workspace = true
 repository.workspace = true
 publish = false
 
+[features]
+training = ["burn/train"]
+
 [dependencies]
+burn = { workspace = true, features = ["std"] }
+serde.workspace = true
+thiserror.workspace = true
+
+[dev-dependencies]
+burn = { workspace = true, features = ["flex"] }
