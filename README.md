@@ -10,8 +10,18 @@
 
 <br clear="left">
 
-## Configuration
+## Get started
 
-[`homeostat.toml`](homeostat.toml) contains an example of the intended runtime
-configuration. Configuration loading is not wired into the CLI yet, so the
-controller currently continues to use its built-in defaults.
+Download the latest Homeostat release for your platform from
+[GitHub Releases](https://github.com/homeostat-ai/homeostat/releases/latest),
+extract it, then start the controller:
+
+```console
+./homeostat controller start
+```
+
+Check that it is running:
+
+```console
+curl http://localhost:9090/healthz
+```
