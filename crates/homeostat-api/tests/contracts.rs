@@ -24,6 +24,7 @@ fn observation_represents_scaling_and_sharding_inputs() {
         system_id: "system-1".to_owned(),
         revision: 7,
         observed_at_unix_ms: 1_700_000_000_000,
+        aggregation_window_ms: Some(5 * 60_000),
         node_groups: vec![NodeGroupObservation {
             node_group_id: "workers".to_owned(),
             desired_nodes: Some(3),
@@ -40,17 +41,14 @@ fn observation_represents_scaling_and_sharding_inputs() {
         nodes: vec![
             NodeObservation {
                 node_id: "node-1".to_owned(),
-                shard_count: Some(1),
                 ..Default::default()
             },
             NodeObservation {
                 node_id: "node-2".to_owned(),
-                shard_count: Some(1),
                 ..Default::default()
             },
             NodeObservation {
                 node_id: "node-3".to_owned(),
-                shard_count: Some(1),
                 ..Default::default()
             },
         ],
@@ -77,16 +75,25 @@ fn observation_represents_scaling_and_sharding_inputs() {
                 shard_id: "shard-1".to_owned(),
                 node_id: "node-1".to_owned(),
                 role: PlacementRole::Leader.into(),
+                workload: Some(Workload {
+                    write_ops_per_sec: Some(50.0),
+                    ..Default::default()
+                }),
             },
             Placement {
                 shard_id: "shard-1".to_owned(),
                 node_id: "node-2".to_owned(),
                 role: PlacementRole::Follower.into(),
+                workload: Some(Workload {
+                    read_ops_per_sec: Some(40.0),
+                    ..Default::default()
+                }),
             },
             Placement {
                 shard_id: "shard-1".to_owned(),
                 node_id: "node-3".to_owned(),
                 role: PlacementRole::Observer.into(),
+                workload: None,
             },
         ],
         data_quality: Some(DataQuality {
@@ -127,7 +134,7 @@ fn action_contract_represents_every_mvp_action() {
             expected_revision: Some(7),
             kind: Some(action::Kind::SplitShard(SplitShard {
                 shard_id: "shard-1".to_owned(),
-                split_points: vec!["midpoint".to_owned()],
+                split_after_segment_ordinals: vec![3],
             })),
         },
         Action {

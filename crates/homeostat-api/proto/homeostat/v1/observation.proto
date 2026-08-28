@@ -106,7 +106,8 @@ message NodeObservation {
   HealthObservation health = 8;
   map<string, string> labels = 9;
   map<string, string> topology_domains = 10;
-  optional uint32 shard_count = 11;
+  reserved 11;
+  reserved "shard_count";
 }
 
 message NodeGroupObservation {
@@ -154,7 +155,8 @@ enum ShardState {
 // useful split points without exposing backend-specific key representations.
 message ShardSegmentObservation {
   uint32 ordinal = 1;
-  optional string split_point_after = 2;
+  reserved 2;
+  reserved "split_point_after";
   Workload workload = 3;
   optional uint64 state_bytes = 4;
 }
@@ -189,6 +191,10 @@ message Placement {
   string shard_id = 1;
   string node_id = 2;
   PlacementRole role = 3;
+
+  // Traffic served by this placement. It may be absent when the backend only
+  // exposes workload for the shard as a whole.
+  Workload workload = 4;
 }
 
 // Resolved placement policy at observation time. An empty allowed list means
@@ -248,4 +254,8 @@ message Observation {
   repeated PlacementConstraint placement_constraints = 10;
   repeated NetworkLinkObservation network_links = 11;
   DataQuality data_quality = 12;
+
+  // Window used to aggregate rate, ratio, and percentile fields. Raw gauges
+  // remain point-in-time values at observed_at_unix_ms.
+  optional uint64 aggregation_window_ms = 13;
 }

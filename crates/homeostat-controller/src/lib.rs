@@ -22,7 +22,10 @@ impl Policy for NoOpPolicy {
 
     async fn propose(&self, observation: &Observation) -> Result<Action, Self::Error> {
         Ok(Action {
-            action_id: String::new(),
+            action_id: format!(
+                "noop:{}:{}",
+                observation.observation_id, observation.revision
+            ),
             expected_revision: Some(observation.revision),
             kind: Some(action::Kind::NoOp(NoOp {})),
         })

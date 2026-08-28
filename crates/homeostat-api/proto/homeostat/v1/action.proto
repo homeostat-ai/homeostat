@@ -29,19 +29,14 @@ message TransferLeadership {
   string target_node_id = 2;
 }
 
-message AddReplica {
-  string shard_id = 1;
-  string target_node_id = 2;
-}
-
-message RemoveReplica {
-  string shard_id = 1;
-  string node_id = 2;
-}
-
 message SplitShard {
   string shard_id = 1;
-  repeated string split_points = 2;
+  reserved 2;
+  reserved "split_points";
+
+  // Ordinals must reference segments from the expected Observation revision.
+  // The backend adapter resolves them to system-specific boundaries.
+  repeated uint32 split_after_segment_ordinals = 3;
 }
 
 // Merges two or more compatible shards. The executor is responsible for
@@ -54,13 +49,17 @@ message NoOp {}
 
 message Action {
   string action_id = 1;
+
+  // Required by the execution contract. The generic validator rejects an
+  // absent value before any backend-specific validation runs.
   optional uint64 expected_revision = 2;
+
+  reserved 12, 13;
+  reserved "add_replica", "remove_replica";
 
   oneof kind {
     MoveShard move_shard = 10;
     TransferLeadership transfer_leadership = 11;
-    AddReplica add_replica = 12;
-    RemoveReplica remove_replica = 13;
     SplitShard split_shard = 14;
     NoOp no_op = 15;
     HorizontalScale horizontal_scale = 16;

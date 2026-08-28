@@ -53,6 +53,25 @@ impl ActionValidation {
     }
 }
 
+/// Validates backend-neutral invariants shared by every executor.
+pub fn validate_action_contract(action: &Action) -> ActionValidation {
+    let mut violations = Vec::new();
+
+    if action.action_id.trim().is_empty() {
+        violations.push("action_id is required".to_owned());
+    }
+
+    if action.expected_revision.is_none() {
+        violations.push("expected_revision is required".to_owned());
+    }
+
+    if action.kind.is_none() {
+        violations.push("action kind is required".to_owned());
+    }
+
+    ActionValidation { violations }
+}
+
 /// Validates and executes actions while preserving system-specific correctness.
 ///
 /// Implementations emit one trace span per action with the stable attributes
@@ -63,7 +82,18 @@ impl ActionValidation {
 pub trait Executor: Send + Sync {
     type Error: std::error::Error + Send + Sync + 'static;
 
-    async fn validate(&self, action: &Action) -> Result<ActionValidation, Self::Error>;
+    /// Validates constraints that depend on the managed system.
+    async fn validate_system(&self, action: &Action) -> Result<ActionValidation, Self::Error>;
+
+    /// Runs generic validation before consulting the managed system.
+    async fn validate(&self, action: &Action) -> Result<ActionValidation, Self::Error> {
+        let validation = validate_action_contract(action);
+        if !validation.is_valid() {
+            return Ok(validation);
+        }
+
+        self.validate_system(action).await
+    }
 
     async fn execute(&self, action: Action, dry_run: bool) -> Result<Operation, Self::Error>;
 
@@ -72,7 +102,8 @@ pub trait Executor: Send + Sync {
 
 #[cfg(test)]
 mod tests {
-    use super::ActionValidation;
+    use super::{ActionValidation, validate_action_contract};
+    use homeostat_api::v1::{Action, NoOp, action};
 
     #[test]
     fn validation_is_valid_when_there_are_no_violations() {
@@ -86,5 +117,23 @@ mod tests {
         };
 
         assert!(!validation.is_valid());
+    }
+
+    #[test]
+    fn contract_validation_rejects_missing_required_fields() {
+        let validation = validate_action_contract(&Action::default());
+
+        assert_eq!(validation.violations.len(), 3);
+    }
+
+    #[test]
+    fn contract_validation_accepts_a_complete_action() {
+        let action = Action {
+            action_id: "noop:observation-1:7".to_owned(),
+            expected_revision: Some(7),
+            kind: Some(action::Kind::NoOp(NoOp {})),
+        };
+
+        assert!(validate_action_contract(&action).is_valid());
     }
 }
