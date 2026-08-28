@@ -424,11 +424,22 @@ dependencies = [
 ]
 
 [[package]]
+name = "homeostat-model"
+version = "0.1.0"
+
+[[package]]
 name = "homeostat-source"
 version = "0.1.0"
 dependencies = [
  "async-trait",
  "homeostat-api",
+]
+
+[[package]]
+name = "homeostat-training"
+version = "0.1.0"
+dependencies = [
+ "homeostat-model",
 ]
 
 [[package]]

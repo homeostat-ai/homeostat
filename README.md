@@ -9,3 +9,9 @@
 [![Stars](https://img.shields.io/github/stars/homeostat-ai/homeostat?style=flat-square&logo=github)](https://github.com/homeostat-ai/homeostat)
 
 <br clear="left">
+
+## Configuration
+
+[`homeostat.toml`](homeostat.toml) contains an example of the intended runtime
+configuration. Configuration loading is not wired into the CLI yet, so the
+controller currently continues to use its built-in defaults.

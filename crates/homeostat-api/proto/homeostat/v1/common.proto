@@ -52,6 +52,22 @@ message MoveShard {
   string target_node_id = 3;
 }
 
+// Changes the desired size of a homogeneous node group. The target count is
+// absolute so retries remain idempotent.
+message HorizontalScale {
+  string node_group_id = 1;
+  uint32 target_node_count = 2;
+}
+
+// Changes the desired capacity of one node. Optional fields distinguish an
+// unchanged resource from a requested target value.
+message VerticalScale {
+  string node_id = 1;
+  optional double target_cpu_cores = 2;
+  optional uint64 target_memory_bytes = 3;
+  optional uint64 target_direct_memory_bytes = 4;
+}
+
 message TransferLeadership {
   string shard_id = 1;
   string target_node_id = 2;
@@ -69,6 +85,13 @@ message RemoveReplica {
 
 message SplitShard {
   string shard_id = 1;
+  repeated string split_points = 2;
+}
+
+// Merges two or more compatible shards. The executor is responsible for
+// validating adjacency and system-specific merge constraints.
+message MergeShards {
+  repeated string shard_ids = 1;
 }
 
 message NoOp {}
@@ -83,6 +106,9 @@ message Action {
     RemoveReplica remove_replica = 13;
     SplitShard split_shard = 14;
     NoOp no_op = 15;
+    HorizontalScale horizontal_scale = 16;
+    VerticalScale vertical_scale = 17;
+    MergeShards merge_shards = 18;
   }
 }
 
@@ -113,4 +139,3 @@ message Operation {
   OperationPhase phase = 3;
   string message = 4;
 }
-

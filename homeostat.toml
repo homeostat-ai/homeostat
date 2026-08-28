@@ -1,0 +1,7 @@
+# Example Homeostat configuration.
+#
+# Configuration loading is not wired into the CLI yet. This file documents the
+# intended shape and mirrors the controller's current built-in defaults.
+
+[controller.observability]
+listen_address = "0.0.0.0:9090"

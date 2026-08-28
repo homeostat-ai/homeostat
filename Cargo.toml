@@ -4,7 +4,9 @@ members = [
     "crates/homeostat-cli",
     "crates/homeostat-controller",
     "crates/homeostat-executor",
+    "crates/homeostat-model",
     "crates/homeostat-source",
+    "crates/homeostat-training",
 ]
 resolver = "3"
 
